@@ -1,80 +1,104 @@
 # titan-builder-skill
 
-A [Claude Code](https://claude.ai/claude-code) skill for interacting with [Titan Builder](https://titanbuilder.xyz) — the high-performance Ethereum block builder.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-This skill provides Claude Code with deep knowledge of Titan Builder's API and MEV workflows, enabling natural language interaction for bundle management, transaction submission, and bundle debugging.
+**Claude Code skill for [Titan Builder](https://titanbuilder.xyz) — AI-powered MEV development assistant & bundle debugger.**
 
-## Features
+Turn Claude into a Titan Builder expert. Debug bundle failures interactively, get MEV development best practices, generate integration code, and access the complete Titan Builder API reference — all through natural language.
 
-- **Bundle Management** — Send, cancel, and trace MEV bundles through natural language
-- **Bundle Debugging** — Understand why bundles failed with detailed status explanations
-- **Transaction Submission** — Submit raw transactions and blob transactions via Titan Builder's private RPC
-- **Refund Calculation** — Calculate and configure bundle refund parameters
-- **Regional Endpoint Selection** — Automatically select the best RPC endpoint
+## Highlights
+
+- **Interactive bundle debugging** — query `titan_getBundleStats` and get diagnostic analysis with actionable suggestions
+- **MEV best practices** — bundle construction patterns, gas/bribe strategy, refund configuration, submission timing
+- **Code generation** — generate Titan Builder API integration code in your project's language
+- **Complete API reference** — all 5 endpoints documented with parameters, examples, and edge cases
 
 ## Quick Start
 
-### Installation
-
-Copy the skill file to your Claude Code skills directory:
-
 ```bash
-# Project-level
+# Install globally
+cp titan-builder.md ~/.claude/skills/
+
+# Or project-level
 mkdir -p .claude/skills
 cp titan-builder.md .claude/skills/
-
-# Or global
-cp titan-builder.md ~/.claude/skills/
 ```
 
-### Usage
-
-Once installed, you can interact with Titan Builder using natural language in Claude Code:
+Then in Claude Code:
 
 ```
-> /titan-builder send a bundle with these two transactions to block 0x102286B
+> /titan-builder debug bundle 0x164d7d41f24b...
 
-> /titan-builder check the status of bundle 0x164d7d...
+> /titan-builder why does my bundle keep getting ExcludedFromBlock?
 
-> /titan-builder why did my bundle fail?
-
-> /titan-builder cancel bundle with UUID abcd1234
+> /titan-builder generate a backrun bundle submission in Rust
 ```
 
-## Skill Capabilities
+## Usage Examples
 
-### Bundle Operations
+### Debug a Failed Bundle
 
-- **Send Bundle** — Construct and send `eth_sendBundle` requests with full parameter support
-- **Cancel Bundle** — Cancel bundles by `replacementUuid`
-- **Bundle Stats** — Query `titan_getBundleStats` and interpret results
+```
+> /titan-builder debug bundle 0x164d7d41f24b7f333af3b4a70b690cf93f636227165ea2b699fbb7eed09c46c7
+```
 
-### Transaction Operations
+The skill queries `stats.titanbuilder.xyz`, analyzes the response, and provides:
+- Status explanation (e.g., SimulationFail)
+- Root cause (e.g., transaction 0x…456 reverted)
+- Actionable fix (e.g., add hash to `revertingTxHashes`)
 
-- **Send Raw Transaction** — Submit signed transactions via `eth_sendRawTransaction`
-- **Send Blobs** — Submit blob transaction permutations via `eth_sendBlobs`
+### MEV Development Guidance
 
-### Diagnostics
+```
+> /titan-builder how should I structure a backrun bundle with refund?
+```
 
-- **Status Interpretation** — Explain bundle statuses (Received, Invalid, SimulationFail, SimulationPass, ExcludedFromBlock, IncludedInBlock, Submitted)
-- **Troubleshooting** — Suggest fixes based on bundle status and error messages
-- **Refund Calculation** — Compute expected refund amounts given bundle parameters
+Get step-by-step guidance on bundle construction, including `refundPercent` configuration, `replacementUuid` strategy, and submission timing.
+
+### API Reference
+
+```
+> /titan-builder what parameters does eth_sendBundle accept?
+```
+
+Instant access to complete parameter documentation with types, defaults, and usage notes.
+
+## What's Inside
+
+The skill embeds comprehensive knowledge of:
+
+- **Titan Builder API** — all 5 endpoints with full parameter reference
+- **Bundle Tracing** — 7 bundle statuses with diagnostic flowcharts
+- **MEV Patterns** — backrun, sandwich, and liquidation bundle construction
+- **Operational Knowledge** — gas estimation, bribe strategy, timing windows, regional endpoints
+- **Builder Identity** — public keys and coinbase address for block verification
+
+## Bundle Status Reference
+
+| Status | Meaning | Common Fix |
+|---|---|---|
+| `Received` | Arrived too late for the pool | Submit earlier, use regional endpoint |
+| `Invalid` | Malformed bundle | Check RLP, chain ID, nonces, block number |
+| `SimulationFail` | Revert or zero builder payment | Fix reverting tx or increase priority fee |
+| `SimulationPass` | Passed but too late | Submit earlier in the slot |
+| `ExcludedFromBlock` | Insufficient bribe (99% of cases) | Increase priority fee |
+| `IncludedInBlock` | Lost to a more valuable block | Increase bribe |
+| `Submitted` | Success — submitted to relay | Monitor for on-chain inclusion |
 
 ## Titan Builder Endpoints
 
 | Region | URL |
 |---|---|
-| Global (geo-routed) | `https://rpc.titanbuilder.xyz` |
-| Europe | `https://eu.rpc.titanbuilder.xyz` |
 | United States | `https://us.rpc.titanbuilder.xyz` |
+| Europe | `https://eu.rpc.titanbuilder.xyz` |
 | Asia | `https://ap.rpc.titanbuilder.xyz` |
 | Testnet (Hoodi) | `https://rpc-hoodi.titanbuilder.xyz` |
 | Bundle Stats | `https://stats.titanbuilder.xyz` |
 
-## Contributing
+## Related
 
-Contributions are welcome! Please open an issue or submit a pull request.
+- [titan-builder-mcp](https://github.com/VPC-byte/titan-builder-mcp) — Rust MCP server for Titan Builder with Enhanced Bundle Tracing
 
 ## License
 
-MIT
+[MIT](LICENSE)
